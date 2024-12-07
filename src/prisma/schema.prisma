@@ -1,0 +1,79 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model category {
+  category_id   Int        @id @default(autoincrement())
+  category_name String     @db.VarChar(255)
+  deleted       Boolean?   @default(false)
+  created_at    DateTime?  @default(now()) @db.Timestamp(6)
+  updated_at    DateTime?  @default(now()) @db.Timestamp(6)
+  products      products[]
+}
+
+model orders {
+  order_id    Int        @id @default(autoincrement())
+  user_id     Int?
+  product_ids Int[]
+  created_at  DateTime?  @default(now()) @db.Timestamp(6)
+  updated_at  DateTime?  @default(now()) @db.Timestamp(6)
+  users       users?     @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+  payments    payments[]
+  shipping    shipping[]
+}
+
+model payments {
+  payment_id Int       @id @default(autoincrement())
+  order_id   Int?
+  status     String    @db.VarChar(50)
+  created_at DateTime? @default(now()) @db.Timestamp(6)
+  updated_at DateTime? @default(now()) @db.Timestamp(6)
+  orders     orders?   @relation(fields: [order_id], references: [order_id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model products {
+  product_id          Int       @id @default(autoincrement())
+  user_id             Int?
+  product_name        String    @db.VarChar(255)
+  product_attributes  Json?
+  product_description String?
+  product_quantity    Int
+  product_rate        Decimal?  @db.Decimal(2, 1)
+  product_star        Int?
+  deleted             Boolean?  @default(false)
+  created_at          DateTime? @default(now()) @db.Timestamp(6)
+  updated_at          DateTime? @default(now()) @db.Timestamp(6)
+  category_id         Int?
+  category            category? @relation(fields: [category_id], references: [category_id], onDelete: NoAction, onUpdate: NoAction)
+  users               users?    @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model shipping {
+  ship_id    Int       @id @default(autoincrement())
+  order_id   Int?
+  full_name  String    @db.VarChar(255)
+  email      String    @db.VarChar(255)
+  phone      String    @db.VarChar(15)
+  address    String
+  status     String?   @default("Pending") @db.VarChar(50)
+  created_at DateTime? @default(now()) @db.Timestamp(6)
+  updated_at DateTime? @default(now()) @db.Timestamp(6)
+  orders     orders?   @relation(fields: [order_id], references: [order_id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model users {
+  user_id    Int        @id @default(autoincrement())
+  username   String     @db.VarChar(255)
+  email      String     @unique @db.VarChar(255)
+  password   String     @db.VarChar(255)
+  deleted    Boolean?   @default(false)
+  created_at DateTime?  @default(now()) @db.Timestamp(6)
+  updated_at DateTime?  @default(now()) @db.Timestamp(6)
+  orders     orders[]
+  products   products[]
+}
